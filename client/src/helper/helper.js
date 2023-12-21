@@ -12,6 +12,7 @@ export async function getUsername(){
     const token = localStorage.getItem('token')
     if(!token) return Promise.reject("Cannot find Token");
     let decode = jwt_decode(token)
+    // console.log(decode);
     return decode;
 }
 

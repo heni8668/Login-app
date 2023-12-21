@@ -1,24 +1,53 @@
-import React from 'react';
-import { Link,  } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate, Navigate } from 'react-router-dom';
 import avatar from '../assets/profile.png';
 import styles from '../styles/Username.module.css';
-import {Toaster } from 'react-hot-toast';
+import toast,  {Toaster } from 'react-hot-toast';
 import { useFormik  } from 'formik';
 import { resetPasswordValidation } from '../helper/validate';
+import { resetPassword } from '../helper/helper';
+import { useAuthStore } from '../store/store';
+import useFetch from '../hooks/fetch.hoook'
 
 export default function Reset() {
+
+  const { username } = useAuthStore(state => state.auth);
+  const navigate = useNavigate();
+  const [{ isLoading, apiData, status, serverError }] = useFetch('createResetSession')
+
+  useEffect(() => {
+    if(status) {
+
+    }
+  }, [isLoading, apiData, serverError])
+
+
     const formik = useFormik({
         initialValues : {
-          password : '',
-          confirm_pwd: ''
+          password : 'admin@123',
+          confirm_pwd: 'admin@123'
         },
         validate : resetPasswordValidation,
         validateOnBlur: false,
         validateOnChange: false,
         onSubmit : async values => {
-          console.log(values);
+          let resetPromise = resetPassword({ username, password: values.password })
+          toast.promise(resetPromise, {
+            loading: 'Updating...',
+            success: <b>Reset Successfully</b>,
+            error: <b>Could Not Reset!</b>
+          });
+          resetPromise.then(function () {
+            navigate('/password')
+          })
         }
       })
+
+      if(isLoading) return <h1 className='text-2xl font-bold'>isLoading</h1>
+      if(serverError) return <h1 className='text-xl text-red-500'>{serverError.message}</h1>
+      if(status && status !== 201) return <Navigate to={'/password'} replace={true}></Navigate>
+
+
   return (
 <div className="container mx-auto">
 <Toaster position='top-center' reverseOrder={false}></Toaster>
@@ -41,7 +70,7 @@ export default function Reset() {
 
         <div className="textbox flex flex-col items-center gap-6">
             <input {...formik.getFieldProps('password')}  className={styles.textbox} type="text" placeholder='Password' />
-            <input {...formik.getFieldProps('pwd')}  className={styles.textbox} type="text" placeholder='Repeat Password' />
+            <input {...formik.getFieldProps('confirm_pwd')}  className={styles.textbox} type="text" placeholder='Repeat Password' />
             <button className={styles.btn} type='submit'>Reset</button>
         </div>
 
